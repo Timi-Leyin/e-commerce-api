@@ -37,9 +37,9 @@ export default async (req: Request | any, res: Response) => {
       lastName,
       phone,
       additional_phone:additionalPhone,
-      city,
+      city : 'Nigeria',
       country,
-      region,
+      region : "Nigeria",
       isDefault: countAll.count == 0
     });
     address.save();

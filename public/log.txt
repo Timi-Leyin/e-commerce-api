@@ -263,3 +263,15 @@
         _________________________________________________________________________
         
         
+        ___________________________ Sat, 14 Jun 2025 16:12:31 GMT ___________________________
+        
+        {"name":"SequelizeConnectionError","parent":{"errorno":"ETIMEDOUT","code":"ETIMEDOUT","syscall":"connect","fatal":true},"original":{"errorno":"ETIMEDOUT","code":"ETIMEDOUT","syscall":"connect","fatal":true}}
+        _________________________________________________________________________
+        
+        
+        ___________________________ Sat, 14 Jun 2025 16:12:41 GMT ___________________________
+        
+        {"name":"SequelizeConnectionError","parent":{"errorno":"ETIMEDOUT","code":"ETIMEDOUT","syscall":"connect","fatal":true},"original":{"errorno":"ETIMEDOUT","code":"ETIMEDOUT","syscall":"connect","fatal":true}}
+        _________________________________________________________________________
+        
+        
