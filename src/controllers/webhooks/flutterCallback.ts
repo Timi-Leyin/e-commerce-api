@@ -112,7 +112,8 @@ export default async (req: Request, res: Response) => {
         msg: "Transaction could not be completed",
       });
     }
-    res.end();
+    res.redirect("https://all-star-communications.com/failed")
+    // res.end();
   } catch (error) {
     console.log(error);
     return errorHandler(res, error);
