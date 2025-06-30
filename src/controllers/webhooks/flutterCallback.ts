@@ -18,14 +18,16 @@ export default async (req: Request, res: Response) => {
       });
 
       if (!transactionDetails) {
-        return res.status(mainConfig.status.notFound).json({
-          msg: "Transaction not Found | Checkout Again",
-        });
+        return res.redirect("https://all-star-communications.com/failed")
+        // return res.status(mainConfig.status.notFound).json({
+        //   msg: "Transaction not Found | Checkout Again",
+        // });
       }
       if (transactionDetails.get().status == "successful") {
-        return res.status(mainConfig.status.conflict).json({
-          msg: "Transaction already verified",
-        });
+        res.redirect("https://all-star-communications.com/success")
+        // return res.status(mainConfig.status.conflict).json({
+        //   msg: "Transaction already verified",
+        // });
       }
 
       // console.log(transactionDetails.get())
@@ -103,14 +105,16 @@ export default async (req: Request, res: Response) => {
 
         // sending notification end
 
-        return res.status(mainConfig.status.ok).json({
-          msg: "Transaction Completed",
-        });
+        // return res.status(mainConfig.status.ok).json({
+        //   msg: "Transaction Completed",
+        // });
+        return res.redirect("https://all-star-communications.com/success")
       }
       console.log(flw_verify);
-      return res.status(mainConfig.status.bad).json({
-        msg: "Transaction could not be completed",
-      });
+      return res.redirect("https://all-star-communications.com/failed")
+      // return res.status(mainConfig.status.bad).json({
+      //   msg: "Transaction could not be completed",
+      // });
     }
     res.redirect("https://all-star-communications.com/failed")
     // res.end();
