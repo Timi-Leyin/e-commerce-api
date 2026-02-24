@@ -6,6 +6,15 @@ import errorHandler from "../../utils/errorHandler";
 import Cart from "../../models/Cart";
 import { IRequest } from "../../types/express";
 
+const shuffleProducts = <T>(items: T[]) => {
+  const result = [...items];
+  for (let index = result.length - 1; index > 0; index--) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [result[index], result[randomIndex]] = [result[randomIndex], result[index]];
+  }
+  return result;
+};
+
 export default async (
   req: IRequest | any,
   res: Response,
@@ -66,6 +75,8 @@ export default async (
       })
     );
 
+    const randomizedProducts = shuffleProducts(productsRow);
+
     return res.status(mainConfig.status.ok).json({
       msg: "Products Retrieved",
       warning: !req.user && "Invalid Authorization",
@@ -74,7 +85,7 @@ export default async (
         currentPage,
         totalPages,
         totalItems: products.count,
-        products: productsRow,
+        products: randomizedProducts,
       },
     });
   } catch (error) {

@@ -60,6 +60,10 @@ bun dev
 ### Login
  - send otp if 2_FA is ON
 
+## Frontend Docs
+- Forgot Password: `docs/frontend-forgot-password.md`
+- Payment Receipt: `docs/frontend-payment-receipt.md`
+
 ### Forgotten Password
  - link sends a reset or verify type 
    if verify then 2_Fa is ON

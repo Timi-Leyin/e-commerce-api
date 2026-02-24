@@ -56,6 +56,7 @@ import { generateRandomProducts } from "./edge-cases/products";
 import verifyAdmin from "./middlewares/verifyAdmin";
 import verifyToken from "./middlewares/verifyToken";
 import ordersRoutes from "./routes/ordersRoutes";
+import transactionsRoutes from "./routes/transactionsRoutes";
 
 app.get("/", (_, res) => {
   res.send("Welcome to All Stars solutions 😁");
@@ -71,6 +72,7 @@ app.use("/admin", verifyToken, verifyAdmin, adminRoutes);
 app.use("/product", productRoutes);
 app.use("/cart", cartRoutes);
 app.use("/webhooks", webhooksRoutes);
+app.use("/api/v1/transactions", transactionsRoutes);
 // error rotes
 app.use(errors);
 export default app;

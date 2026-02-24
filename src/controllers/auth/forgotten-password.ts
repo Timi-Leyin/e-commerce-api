@@ -21,6 +21,13 @@ const forgottenPassword = async (req: Request, res: Response) => {
       });
     }
 
+    await Token.destroy({
+      where: {
+        user_id: email_ex.get().uuid,
+        type: "reset",
+      },
+    });
+
     //   generate token
     const token = nanoid(30);
     const tk = await Token.create({
