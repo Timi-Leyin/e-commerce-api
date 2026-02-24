@@ -6,10 +6,17 @@ import Orders, { orderStatus } from "../../models/Order";
 import User from "../../models/User";
 import sendWhatsAppText from "../../utils/sendWhatsAppImage";
 
+const SUCCESS_REDIRECT_URL =
+  process.env.FLUTTERWAVE_SUCCESS_REDIRECT_URL ||
+  "https://all-star-communications.com/success";
+const FAILED_REDIRECT_URL =
+  process.env.FLUTTERWAVE_FAILED_REDIRECT_URL ||
+  "https://all-star-communications.com/failed";
+
 export default async (req: Request, res: Response) => {
   try {
     if (req.query.status !== "completed" && req.query.status !== "successful") {
-      return res.redirect("https://all-star-communications.com/failed");
+      return res.redirect(FAILED_REDIRECT_URL);
     }
 
     const transactionDetails = await Transactions.findOne({
@@ -17,19 +24,40 @@ export default async (req: Request, res: Response) => {
     });
 
     if (!transactionDetails) {
-      return res.redirect("https://all-star-communications.com/failed");
+      return res.redirect(FAILED_REDIRECT_URL);
     }
 
-    if (transactionDetails.get().status === "successful") {
-      return res.redirect("https://all-star-communications.com/success");
+    const existingStatus = String(transactionDetails.get().status || "").toLowerCase();
+    if (
+      existingStatus === "successful" ||
+      existingStatus === "completed" ||
+      existingStatus === "paid"
+    ) {
+      return res.redirect(SUCCESS_REDIRECT_URL);
     }
 
-    const flw_verify = await flw.Transaction.verify({
-      id: req.query.transaction_id,
-    });
+    let flw_verify;
+    try {
+      flw_verify = await flw.Transaction.verify({
+        id: req.query.transaction_id,
+      });
+    } catch (verifyError: any) {
+      const rawMessage =
+        verifyError?.response?.data?.message ||
+        verifyError?.response?.data?.msg ||
+        verifyError?.message ||
+        "";
+      const normalizedMessage = String(rawMessage).toLowerCase();
+
+      if (normalizedMessage.includes("already verified")) {
+        return res.redirect(SUCCESS_REDIRECT_URL);
+      }
+
+      throw verifyError;
+    }
 
     if (flw_verify.status !== "success") {
-      return res.redirect("https://all-star-communications.com/failed");
+      return res.redirect(FAILED_REDIRECT_URL);
     }
 
     // Update transaction
@@ -99,9 +127,9 @@ export default async (req: Request, res: Response) => {
       console.error("WhatsApp admin notification failed:", err);
     }
 
-    return res.redirect("https://all-star-communications.com/success");
+    return res.redirect(SUCCESS_REDIRECT_URL);
   } catch (error) {
     console.error(error);
-    return errorHandler(res, error);
+    return res.redirect(FAILED_REDIRECT_URL);
   }
 };
