@@ -64,6 +64,7 @@
     "sequelize": "^6.33.0",
     "supertest": "^6.3.3",
     "token-generator": "^1.0.0",
+    "twilio": "^4.23.0",
     "uuid": "^9.0.1"
   }
 }

@@ -2,124 +2,106 @@ import { Request, Response } from "express";
 import errorHandler from "../../utils/errorHandler";
 import Transactions from "../../models/Transactions";
 import { flw } from "../../utils/flutterwaveTransfer";
-import mainConfig from "../../config/main";
 import Orders, { orderStatus } from "../../models/Order";
-import sendNotification from "../../utils/sendNotification";
-import { NotificationType } from "../../models/Notification";
 import User from "../../models/User";
+import sendWhatsAppText from "../../utils/sendWhatsAppImage";
 
 export default async (req: Request, res: Response) => {
   try {
-    if (req.query.status === "completed" || req.query.status == "successful") {
-      const transactionDetails = await Transactions.findOne({
-        where: {
-          ref: req.query.tx_ref,
-        },
-      });
-
-      if (!transactionDetails) {
-        return res.redirect("https://all-star-communications.com/failed")
-        // return res.status(mainConfig.status.notFound).json({
-        //   msg: "Transaction not Found | Checkout Again",
-        // });
-      }
-      if (transactionDetails.get().status == "successful") {
-        res.redirect("https://all-star-communications.com/success")
-        // return res.status(mainConfig.status.conflict).json({
-        //   msg: "Transaction already verified",
-        // });
-      }
-
-      // console.log(transactionDetails.get())
-
-      const flw_verify = await flw.Transaction.verify({
-        id: req.query.transaction_id,
-      });
-      if (flw_verify.status == "success") {
-        // console.log(flw_verify)
-        await Transactions.update(
-          {
-            transaction_id: flw_verify.data.id,
-            status: flw_verify.data.status,
-            amount: flw_verify.data.amount,
-            app_fee: flw_verify.data.app_fee,
-            amount_settled: flw_verify.data.amount_settled,
-            ip: flw_verify.data.ip,
-          },
-          {
-            where: {
-              ref: req.query.tx_ref,
-            },
-          }
-        );
-        console.log(transactionDetails.get().uuid);
-        // update order status
-        await Orders.update(
-          {
-            status: orderStatus.paid, //pending confirmation
-          },
-          {
-            where: {
-              uuid: transactionDetails.get().uuid,
-            },
-          }
-        );
-        // send notification to seller
-
-        const userProfile = await User.findOne({
-          where: {
-            uuid: transactionDetails.get().user_id,
-          },
-          attributes: ["email", "uuid"],
-        });
-
-        // get order details
-        const orders = await Orders.findOne({
-          where: {
-            uuid: transactionDetails.get().uuid,
-          },
-        });
-
-        const raw_order_data = orders?.get().order_data;
-
-        const order_data =
-          typeof raw_order_data == "string"
-            ? JSON.parse(raw_order_data)
-            : raw_order_data;
-
-        // sending notification start
-        order_data.forEach(async (data) => {
-          await sendNotification({
-            type: NotificationType.transaction,
-            title: "A new Transaction has been made",
-            body: `${
-              userProfile?.get().email
-            } Transaction for an Order is Successful`,
-            ref: {
-              transaction_id: transactionDetails.get().uuid,
-              user_id: userProfile?.get().uuid,
-            },
-            to: data.seller_id,
-          });
-        });
-
-        // sending notification end
-
-        // return res.status(mainConfig.status.ok).json({
-        //   msg: "Transaction Completed",
-        // });
-        return res.redirect("https://all-star-communications.com/success")
-      }
-      console.log(flw_verify);
-      return res.redirect("https://all-star-communications.com/failed")
-      // return res.status(mainConfig.status.bad).json({
-      //   msg: "Transaction could not be completed",
-      // });
+    if (req.query.status !== "completed" && req.query.status !== "successful") {
+      return res.redirect("https://all-star-communications.com/failed");
     }
-    res.redirect("https://all-star-communications.com/failed")
-    // res.end();
+
+    const transactionDetails = await Transactions.findOne({
+      where: { ref: req.query.tx_ref },
+    });
+
+    if (!transactionDetails) {
+      return res.redirect("https://all-star-communications.com/failed");
+    }
+
+    if (transactionDetails.get().status === "successful") {
+      return res.redirect("https://all-star-communications.com/success");
+    }
+
+    const flw_verify = await flw.Transaction.verify({
+      id: req.query.transaction_id,
+    });
+
+    if (flw_verify.status !== "success") {
+      return res.redirect("https://all-star-communications.com/failed");
+    }
+
+    // Update transaction
+    await Transactions.update(
+      {
+        transaction_id: flw_verify.data.id,
+        status: flw_verify.data.status,
+        amount: flw_verify.data.amount,
+        app_fee: flw_verify.data.app_fee,
+        amount_settled: flw_verify.data.amount_settled,
+        ip: flw_verify.data.ip,
+      },
+      {
+        where: { ref: req.query.tx_ref },
+      },
+    );
+
+    // Update order status
+    await Orders.update(
+      { status: orderStatus.paid },
+      { where: { uuid: transactionDetails.get().uuid } },
+    );
+
+    // Fetch buyer info
+    const userProfile = await User.findOne({
+      where: { uuid: transactionDetails.get().user_id },
+      attributes: ["email"],
+    });
+
+    // Fetch order
+    const order = await Orders.findOne({
+      where: { uuid: transactionDetails.get().uuid },
+    });
+
+    const rawOrderData = order?.get().order_data;
+    const orderData =
+      typeof rawOrderData === "string"
+        ? JSON.parse(rawOrderData)
+        : rawOrderData;
+
+    // Build admin message
+    const itemsDescription = orderData
+      .map((item: any, index: number) => {
+        return `${index + 1}. ${item.product_name} | Qty: ${
+          item.quantity
+        } | ₦${item.price}`;
+      })
+      .join("\n");
+
+    const adminMessage = `
+              🛒 NEW STORE ORDER
+
+              Customer: ${userProfile?.get().email}
+              Order ID: ${transactionDetails.get().uuid}
+              Amount Paid: ₦${flw_verify.data.amount}
+
+              Items:
+              ${itemsDescription}
+
+              Please process this order.
+`;
+
+    // Send WhatsApp notification to admin
+    try {
+      await sendWhatsAppText(adminMessage);
+    } catch (err) {
+      console.error("WhatsApp admin notification failed:", err);
+    }
+
+    return res.redirect("https://all-star-communications.com/success");
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return errorHandler(res, error);
   }
 };
