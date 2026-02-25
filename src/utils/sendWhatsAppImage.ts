@@ -1,11 +1,34 @@
 import twilio from "twilio";
 
+const toWhatsAppNumber = (phone: string) => {
+  const trimmed = String(phone || "").trim();
+  if (!trimmed) return "";
+
+  if (trimmed.startsWith("whatsapp:")) {
+    return trimmed;
+  }
+
+  const digits = trimmed.replace(/[^\d+]/g, "");
+  const withCountryCode = digits.startsWith("+")
+    ? digits
+    : digits.startsWith("0")
+      ? `+234${digits.slice(1)}`
+      : `+${digits}`;
+
+  return `whatsapp:${withCountryCode}`;
+};
+
 const sendWhatsAppText = async (message: string) => {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
-  const from = process.env.TWILIO_WHATSAPP_FROM;
-  const to = process.env.TWILIO_WHATSAPP_TO ?? process.env.ADMIN_PHONE_NUMBER;
+  const from = toWhatsAppNumber(
+    process.env.TWILIO_WHATSAPP_FROM || "+14155238886",
+  );
+  const to = toWhatsAppNumber(
+    process.env.TWILIO_WHATSAPP_TO || process.env.ADMIN_PHONE_NUMBER || "",
+  );
   const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID;
+  const contentVariables = process.env.TWILIO_WHATSAPP_CONTENT_VARIABLES;
 
   if (!accountSid || !authToken || !from || !to) {
     throw new Error("Missing Twilio WhatsApp configuration.");
@@ -13,27 +36,24 @@ const sendWhatsAppText = async (message: string) => {
 
   const client = twilio(accountSid, authToken);
 
-  const messageParams: {
-    from: string;
-    to: string;
-    body?: string;
-    contentSid?: string;
-    contentVariables?: string;
-  } = {
-    from,
-    to,
-  };
-
   if (contentSid) {
-    messageParams.contentSid = contentSid;
-    messageParams.contentVariables = JSON.stringify({
-      "1": message,
+    return client.messages.create({
+      from,
+      to,
+      contentSid,
+      contentVariables:
+        contentVariables ||
+        JSON.stringify({
+          "1": message,
+        }),
     });
-  } else {
-    messageParams.body = message;
   }
 
-  return client.messages.create(messageParams);
+  return client.messages.create({
+    from,
+    to,
+    body: message,
+  });
 };
 
 export default sendWhatsAppText;
