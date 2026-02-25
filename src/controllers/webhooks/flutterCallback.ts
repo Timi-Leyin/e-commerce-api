@@ -18,6 +18,19 @@ const toNumber = (value: any, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const naira = (value: number) => `₦${toNumber(value).toLocaleString("en-NG")}`;
+
+const toAbsoluteUrl = (url: string) => {
+  const value = String(url || "").trim();
+  if (!value) return "";
+  if (/^https?:\/\//i.test(value)) return value;
+
+  const backendBaseUrl = String(process.env.BACKEND_BASE_URL || "").replace(/\/$/, "");
+  if (!backendBaseUrl) return "";
+
+  return `${backendBaseUrl}${value.startsWith("/") ? "" : "/"}${value}`;
+};
+
 const withReceiptParams = (
   baseUrl: string,
   transactionData: any,
@@ -162,30 +175,49 @@ export default async (req: Request, res: Response) => {
         : rawOrderData;
 
     // Build admin message
-    const itemsDescription = orderData
+    const itemsDescription = (Array.isArray(orderData) ? orderData : [])
       .map((item: any, index: number) => {
-        return `${index + 1}. ${item.product_name} | Qty: ${
-          item.quantity
-        } | ₦${item.price}`;
+        const quantity = Number(item?.quantity || 1);
+        const singlePrice = toNumber(item?.singlePrice, Number.NaN);
+        const totalPrice = toNumber(item?.totalPrice, Number.NaN);
+        const fallbackPrice = quantity > 0 ? totalPrice / quantity : totalPrice;
+        const displayPrice = Number.isFinite(singlePrice)
+          ? singlePrice
+          : Number.isFinite(fallbackPrice)
+            ? fallbackPrice
+            : 0;
+        const lineTotal = Number.isFinite(totalPrice)
+          ? totalPrice
+          : displayPrice * quantity;
+
+        return `${index + 1}) ${item.product_name}\n   Qty: ${quantity} × ${naira(displayPrice)} = ${naira(lineTotal)}`;
       })
       .join("\n");
 
-    const adminMessage = `
-              🛒 NEW STORE ORDER
+    const productImageUrls = Array.from(
+      new Set(
+        (Array.isArray(orderData) ? orderData : [])
+          .map((item: any) => toAbsoluteUrl(item?.product_image || ""))
+          .filter(Boolean),
+      ),
+    );
 
-              Customer: ${userProfile?.get().email}
-              Order ID: ${transactionDetails.get().uuid}
-              Amount Paid: ₦${flw_verify.data.amount}
-
-              Items:
-              ${itemsDescription}
-
-              Please process this order.
-`;
+    const adminMessage = [
+      "🛒 *NEW STORE ORDER*",
+      "",
+      `👤 Customer: ${userProfile?.get().email || "N/A"}`,
+      `🧾 Order ID: ${transactionDetails.get().uuid}`,
+      `💳 Amount Paid: ${naira(Number(flw_verify.data.amount || 0))}`,
+      "",
+      "📦 *Items*",
+      itemsDescription || "No items found",
+      "",
+      "✅ Please process this order.",
+    ].join("\n");
 
     // Send WhatsApp notification to admin
     try {
-      await sendWhatsAppText(adminMessage);
+      await sendWhatsAppText(adminMessage, productImageUrls);
     } catch (err) {
       console.error("WhatsApp admin notification failed:", err);
     }

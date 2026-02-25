@@ -18,7 +18,7 @@ const toWhatsAppNumber = (phone: string) => {
   return `whatsapp:${withCountryCode}`;
 };
 
-const sendWhatsAppText = async (message: string) => {
+const sendWhatsAppText = async (message: string, mediaUrls: string[] = []) => {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const from = toWhatsAppNumber(
@@ -52,10 +52,16 @@ const sendWhatsAppText = async (message: string) => {
     });
   }
 
+  const cleanMediaUrls = mediaUrls
+    .map((url) => String(url || "").trim())
+    .filter(Boolean)
+    .slice(0, 10);
+
   return client.messages.create({
     from,
     to,
     body: message,
+    ...(cleanMediaUrls.length ? { mediaUrl: cleanMediaUrls } : {}),
   });
 };
 
