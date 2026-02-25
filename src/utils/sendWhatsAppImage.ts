@@ -29,6 +29,9 @@ const sendWhatsAppText = async (message: string) => {
   );
   const contentSid = process.env.TWILIO_WHATSAPP_CONTENT_SID;
   const contentVariables = process.env.TWILIO_WHATSAPP_CONTENT_VARIABLES;
+  const useTemplate =
+    String(process.env.TWILIO_USE_CONTENT_TEMPLATE || "false").toLowerCase() ===
+    "true";
 
   if (!accountSid || !authToken || !from || !to) {
     throw new Error("Missing Twilio WhatsApp configuration.");
@@ -36,7 +39,7 @@ const sendWhatsAppText = async (message: string) => {
 
   const client = twilio(accountSid, authToken);
 
-  if (contentSid) {
+  if (useTemplate && contentSid) {
     return client.messages.create({
       from,
       to,
