@@ -215,9 +215,18 @@ export default async (req: Request, res: Response) => {
       "✅ Please process this order.",
     ].join("\n");
 
+    const templateVariables = {
+      "1": transactionDetails.get().uuid,
+      "2": `${naira(Number(flw_verify.data.amount || 0))} | ${
+        Array.isArray(orderData) ? orderData.length : 0
+      } item(s)`,
+      "3": userProfile?.get().email || "N/A",
+      "4": itemsDescription || "No items found",
+    };
+
     // Send WhatsApp notification to admin
     try {
-      await sendWhatsAppText(adminMessage, productImageUrls);
+      await sendWhatsAppText(adminMessage, productImageUrls, templateVariables);
     } catch (err) {
       console.error("WhatsApp admin notification failed:", err);
     }

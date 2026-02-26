@@ -18,7 +18,11 @@ const toWhatsAppNumber = (phone: string) => {
   return `whatsapp:${withCountryCode}`;
 };
 
-const sendWhatsAppText = async (message: string, mediaUrls: string[] = []) => {
+const sendWhatsAppText = async (
+  message: string,
+  mediaUrls: string[] = [],
+  templateVariables?: Record<string, string>,
+) => {
   const accountSid = process.env.TWILIO_ACCOUNT_SID;
   const authToken = process.env.TWILIO_AUTH_TOKEN;
   const from = toWhatsAppNumber(
@@ -41,11 +45,17 @@ const sendWhatsAppText = async (message: string, mediaUrls: string[] = []) => {
 
   try {
     if (useTemplate && contentSid) {
+      const dynamicVariables =
+        templateVariables && Object.keys(templateVariables).length
+          ? JSON.stringify(templateVariables)
+          : undefined;
+
       return await client.messages.create({
         from,
         to,
         contentSid,
         contentVariables:
+          dynamicVariables ||
           contentVariables ||
           JSON.stringify({
             "1": message,
