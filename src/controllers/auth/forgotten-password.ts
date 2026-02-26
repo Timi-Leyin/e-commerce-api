@@ -38,14 +38,20 @@ const forgottenPassword = async (req: Request, res: Response) => {
     });
 
     const tk_db = tk.get();
-    const LINK = `${process.env.FRONTEND_BASE_URL}/auth/verify?token=${tk_db.token}&type=${tk_db.type}`;
+    const frontendBaseUrl = String(process.env.FRONTEND_BASE_URL || "").replace(/\/$/, "");
+    const resetPath = process.env.FRONTEND_RESET_PATH || "/reset";
+    const LINK = `${frontendBaseUrl}${resetPath.startsWith("/") ? "" : "/"}${resetPath}?token=${tk_db.token}&type=${tk_db.type}`;
+    const legacyVerifyLink = `${frontendBaseUrl}/auth/verify?token=${tk_db.token}&type=${tk_db.type}`;
+
     await sendEmail({
       to: email_ex.get().email,
-      subject: "Reset Your Password",
+      subject: "All Star Communication • Reset Your Password",
       path: "src/emails/reset-password.ejs",
       data: {
-        URL: process.env.BACKEND_BASE_URL,
+        brandName: "All Star Communication",
+        logoUrl: "https://www.all-star-communications.com/logo.jpg",
         LINK,
+        legacyVerifyLink,
         name: email_ex.get().email.split("@")[0],
       },
     }).catch(() => console.log("NODEMAILER ERROR"));

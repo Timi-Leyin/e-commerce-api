@@ -53,12 +53,20 @@ This document explains how to integrate the current backend forgot-password flow
 
 The email link points to:
 
-- `${FRONTEND_BASE_URL}/auth/verify?token=<token>&type=reset`
+- `${FRONTEND_BASE_URL}/reset?token=<token>&type=reset`
 
 Frontend should read:
 
 - `token` from query string
 - `type` from query string (expected: `reset`)
+
+Suggested frontend parsing:
+
+```ts
+const token = searchParams.get("token") || "";
+const type = (searchParams.get("type") || "").toLowerCase();
+const hasValidParams = !!token && type === "reset";
+```
 
 ## 3) Submit New Password
 
