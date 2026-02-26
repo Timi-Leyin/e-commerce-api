@@ -5,8 +5,13 @@ import User, { ROLE } from "../../models/User";
 
 const getAllUsers = async (req: any, res: Response) => {
   try {
-    // const { limit, offset } = req.query;
-    const users = await User.findAll({
+    const itemsPerPage = Number(
+      Math.min(Number(req.query.limit || 10), mainConfig.MAX_LIMIT),
+    );
+    const currentPage = Math.max(Number(req.query.page || 1), 1);
+    const offset = (currentPage - 1) * itemsPerPage;
+
+    const users = await User.findAndCountAll({
       where: {
         role: ROLE.user,
       },
@@ -23,11 +28,30 @@ const getAllUsers = async (req: any, res: Response) => {
         "avatar",
         "verified",
       ],
+      limit: itemsPerPage,
+      offset,
+      order: [["createdAt", "DESC"]],
     });
+
+    const usersData = users.rows.map((user) => {
+      const userData = user.get();
+      return {
+        ...userData,
+        role: userData.role === ROLE.user ? "USER" : "ADMIN",
+      };
+    });
+
+    const totalPages = Math.ceil(users.count / itemsPerPage);
 
     return res.status(mainConfig.status.ok).json({
       msg: "users Rerieved",
-      data: users,
+      data: {
+        limit: itemsPerPage,
+        currentPage,
+        totalPages,
+        totalItems: users.count,
+        users: usersData,
+      },
     });
   } catch (error) {
     return errorHandler(res, error);
