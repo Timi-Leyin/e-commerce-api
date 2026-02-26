@@ -39,30 +39,45 @@ const sendWhatsAppText = async (message: string, mediaUrls: string[] = []) => {
 
   const client = twilio(accountSid, authToken);
 
-  if (useTemplate && contentSid) {
+  try {
+    if (useTemplate && contentSid) {
+      return await client.messages.create({
+        from,
+        to,
+        contentSid,
+        contentVariables:
+          contentVariables ||
+          JSON.stringify({
+            "1": message,
+          }),
+      });
+    }
+
+    const cleanMediaUrls = mediaUrls
+      .map((url) => String(url || "").trim())
+      .filter((url) => Boolean(url) && !/localhost|127\.0\.0\.1/i.test(url))
+      .slice(0, 10);
+
+    return await client.messages.create({
+      from,
+      to,
+      body: message,
+      ...(cleanMediaUrls.length ? { mediaUrl: cleanMediaUrls } : {}),
+    });
+  } catch (error: any) {
+    const twilioErrorCode = error?.code;
+    const twilioErrorMessage = error?.message || "Unknown Twilio error";
+    console.error("Twilio WhatsApp send failed, retrying without media/template:", {
+      twilioErrorCode,
+      twilioErrorMessage,
+    });
+
     return client.messages.create({
       from,
       to,
-      contentSid,
-      contentVariables:
-        contentVariables ||
-        JSON.stringify({
-          "1": message,
-        }),
+      body: message,
     });
   }
-
-  const cleanMediaUrls = mediaUrls
-    .map((url) => String(url || "").trim())
-    .filter(Boolean)
-    .slice(0, 10);
-
-  return client.messages.create({
-    from,
-    to,
-    body: message,
-    ...(cleanMediaUrls.length ? { mediaUrl: cleanMediaUrls } : {}),
-  });
 };
 
 export default sendWhatsAppText;
