@@ -1,42 +1,42 @@
-import nodemailer from "nodemailer";
+import axios from "axios";
 import ejs from "ejs";
 import { SendEmailTypes } from "../types/utils";
 
-const transporter = nodemailer.createTransport({
-  // host: "smtp.gmail.com",
-  // service: "gmail",
-  // port: 465,
-  // // secure: true,
-  // auth: {
-  //   type: "OAuth2",
-  //   user: "cartroyalhq@gmail.com",
-  //   clientId: process.env.GOOGLE_CLIENT_ID,
-  //   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  //   refreshToken: process.env.GOOGLE_REFRESH_TOKEN,
-  // },
-  host: "smtp.ethereal.email",
-  port: 587,
-  secure: false,
-  auth: {
-    user: "maddison53@ethereal.email",
-    pass: "jn7jnAPss4f63QBp6D",
-  },
-});
+const RESEND_API_URL = "https://api.resend.com/emails";
 
 const sendEmail = async ({ to, subject, path, data }: SendEmailTypes) => {
   try {
+    const resendApiKey = process.env.RESEND_API_KEY;
+    const from = process.env.RESEND_FROM || "Acme <onboarding@resend.dev>";
+
+    if (!resendApiKey) {
+      throw new Error("Missing RESEND_API_KEY configuration.");
+    }
+
     const template = await ejs.renderFile(path, data, { beautify: true });
-    let info = await transporter.sendMail({
-      from: '"Cartroyal 😊" <info@cartroyal.com>',
-      to,
-      subject,
-      html: template,
-    });
-    console.log("Message sent: >>>>>>>");
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-    return info;
-  } catch (error) {
+
+    const response = await axios.post(
+      RESEND_API_URL,
+      {
+        from,
+        to: [to],
+        subject,
+        html: template,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${resendApiKey}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    console.log("Message sent via Resend: >>>>>>>");
+    console.log("Resend Email ID:", response.data?.id);
+    return response.data;
+  } catch (error: any) {
     console.log("Message not Sent: <<<<<<<<<");
+    console.log(error?.response?.data || error?.message || error);
     return error;
   }
 };

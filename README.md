@@ -64,6 +64,9 @@ bun dev
 - Forgot Password: `docs/frontend-forgot-password.md`
 - Payment Receipt: `docs/frontend-payment-receipt.md`
 
+## Backend Docs
+- Recent Changes: `docs/backend-recent-changes.md`
+
 ### Forgotten Password
  - link sends a reset or verify type 
    if verify then 2_Fa is ON

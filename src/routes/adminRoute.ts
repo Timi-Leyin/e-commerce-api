@@ -19,7 +19,7 @@ adminRoutes.post(
 );
 
 adminRoutes.delete(mainConfig.routes.deleteProduct, deleteProduct);
-adminRoutes.put(mainConfig.routes.updateProduct, updateProduct);
+adminRoutes.put(mainConfig.routes.updateProduct, newProductMulterHandler, updateProduct);
 adminRoutes.get(mainConfig.routes.allUsers, getAllUsers);
 
 export default adminRoutes;
