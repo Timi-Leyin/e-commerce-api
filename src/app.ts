@@ -57,6 +57,7 @@ import verifyAdmin from "./middlewares/verifyAdmin";
 import verifyToken from "./middlewares/verifyToken";
 import ordersRoutes from "./routes/ordersRoutes";
 import transactionsRoutes from "./routes/transactionsRoutes";
+import confirmOrderReceived from "./controllers/orders/confirmOrderReceived";
 
 app.get("/", (_, res) => {
   res.send("Welcome to All Stars solutions 😁");
@@ -67,7 +68,8 @@ app.use("/others/", generalRoutes);
 app.use("/address/", addressBookRoutes);
 app.use("/auth/", authRoutes);
 app.use("/user/", userRoutes);
-app.use("/order", verifyToken, verifyAdmin, ordersRoutes);
+app.get("/order/confirm-received", confirmOrderReceived);
+app.use("/order", verifyToken, ordersRoutes);
 app.use("/admin", verifyToken, verifyAdmin, adminRoutes);
 app.use("/product", productRoutes);
 app.use("/cart", cartRoutes);

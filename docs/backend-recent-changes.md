@@ -280,3 +280,28 @@ Files touched:
   }
 }
 ```
+
+---
+
+## 9) Order delivery status + customer received confirmation + my orders
+
+Files touched:
+- `src/controllers/orders/updateOrderSentForDelivery.ts`
+- `src/controllers/orders/confirmOrderReceived.ts`
+- `src/controllers/orders/getMyOrders.ts`
+- `src/routes/ordersRoutes.ts`
+- `src/app.ts`
+- `src/emails/order-delivery.ejs`
+
+### New/updated endpoints
+
+- `PUT /order/:orderId/sent-for-delivery` (admin)
+- `GET /order/confirm-received?token=...&type=order-received:<orderId>` (public token link)
+- `GET /order/my-orders` (authenticated user)
+
+### What changed
+
+- Admin can mark an order as `out for delivery`.
+- On `sent for delivery`, customer receives an email with a one-click confirmation link.
+- Confirmation link updates order status to `delivered` and invalidates the token.
+- Logged-in users can now fetch only their own orders with pagination.

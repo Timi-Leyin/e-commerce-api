@@ -66,6 +66,7 @@ bun dev
 
 ## Backend Docs
 - Recent Changes: `docs/backend-recent-changes.md`
+- Orders Delivery + User Orders: `docs/orders-delivery-and-user-orders.md`
 
 ### Forgotten Password
  - link sends a reset or verify type 
