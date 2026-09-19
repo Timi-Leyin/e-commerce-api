@@ -58,9 +58,35 @@ import verifyToken from "./middlewares/verifyToken";
 import ordersRoutes from "./routes/ordersRoutes";
 import transactionsRoutes from "./routes/transactionsRoutes";
 import confirmOrderReceivedPublic from "./controllers/orders/confirmOrderReceived";
+import db from "./config/db";
 
 app.get("/", (_, res) => {
   res.send("Welcome to All Stars solutions 😁");
+});
+
+app.get("/health", async (_req, res) => {
+  const started = Date.now();
+  let database: "up" | "down" = "down";
+
+  try {
+    await db.authenticate();
+    database = "up";
+  } catch {
+    database = "down";
+  }
+
+  const healthy = database === "up";
+
+  return res.status(healthy ? 200 : 503).json({
+    status: healthy ? "ok" : "degraded",
+    service: "cart-royal-api",
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    responseMs: Date.now() - started,
+    checks: {
+      database,
+    },
+  });
 });
 // generateRandomProducts()
 app.post("/waitlist", waitlistValidator, validationError, addWaitlist);
