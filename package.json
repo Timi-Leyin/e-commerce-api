@@ -1,15 +1,16 @@
 {
   "name": "cart-royal-api",
-  "main": "server.ts",
+  "main": "build/server.js",
   "scripts": {
-    "build": "tsc",
-    "start": "cross-env NODE_ENV='production' npm run build && cp ./public ./build/public -r && node ./build/server.js",
-    "dev": "cross-env NODE_ENV='development' ts-node-dev server.ts --watch ./*/** ",
-    "dev:bun": "cross-env NODE_ENV='development' bun --watch .",
-    "test": "cross-env NODE_ENV='test' jest"
+    "build": "tsc && node scripts/copy-public.js",
+    "start": "node ./build/server.js",
+    "start:prod": "cross-env NODE_ENV=production node ./build/server.js",
+    "dev": "cross-env NODE_ENV=development ts-node-dev server.ts --watch ./*/** ",
+    "dev:bun": "cross-env NODE_ENV=development bun --watch .",
+    "test": "cross-env NODE_ENV=test jest"
   },
   "engines": {
-    "node": ">=16.14"
+    "node": ">=18"
   },
   "devDependencies": {
     "@jest/globals": "^29.7.0",
