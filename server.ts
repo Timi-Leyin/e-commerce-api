@@ -12,6 +12,8 @@ db.sync({ force: false })
   .then(() => console.log("Synced 😎"))
   .catch((err: any) => console.log(err));
 
-const {PORT} = process.env
-app.listen(PORT, () => console.log(`Server is running on port ${PORT}`));
+const { PORT = "5000" } = process.env;
+app.listen(Number(PORT), "0.0.0.0", () =>
+  console.log(`Server is running on port ${PORT}`),
+);
 

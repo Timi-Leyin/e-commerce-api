@@ -60,7 +60,31 @@ bun dev
 ### Login
  - send otp if 2_FA is ON
 
-## Frontend Docs
+## Docker / Render
+
+### Local
+
+```bash
+docker compose up --build
+# API: http://localhost:5000/health
+```
+
+Or:
+
+```bash
+docker build -t cart-royal-api .
+docker run --env-file .env -p 5000:5000 cart-royal-api
+```
+
+### Render (Docker)
+
+1. Service → **Settings** → Environment: **Docker**
+2. Dockerfile path: `./Dockerfile`
+3. Docker build context: `.`
+4. Health check path: `/health`
+5. Remove any old Start Command like `node server.ts` (Docker uses the image `CMD`)
+
+Or connect the repo with `render.yaml` (runtime: docker).
 - Forgot Password: `docs/frontend-forgot-password.md`
 - OPay Payment: `docs/frontend-opay-payment.md`
 - Address Book: `docs/frontend-address-book.md`
