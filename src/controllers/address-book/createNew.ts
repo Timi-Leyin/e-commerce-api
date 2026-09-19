@@ -3,6 +3,12 @@ import errorHandler from "../../utils/errorHandler";
 import AddressBook from "../../models/AddressBook";
 import mainConfig from "../../config/main";
 import { nanoid } from "nanoid";
+import {
+  formatAddress,
+  normalizePhone,
+} from "../../utils/formatAddress";
+
+const MAX_ADDRESSES = 3;
 
 export default async (req: Request | any, res: Response) => {
   try {
@@ -11,51 +17,70 @@ export default async (req: Request | any, res: Response) => {
       lastName,
       phone,
       additionalPhone,
-      country,
+      country = "Nigeria",
       city,
       region,
+      street,
+      landmark,
+      label,
+      isDefault,
+      setAsDefault,
     } = req.body;
 
+    const countAll = await AddressBook.count({
+      where: {
+        user_id: req.user.uuid,
+      },
+    });
 
+    if (countAll >= MAX_ADDRESSES) {
+      return res.status(mainConfig.status.bad).json({
+        msg: "You can save up to 3 addresses. Edit or remove an existing one to continue.",
+        data: {
+          maxAddresses: MAX_ADDRESSES,
+          currentCount: countAll,
+        },
+      });
+    }
 
-    const countAll = await AddressBook.findAndCountAll({
-        where:{
+    const makeDefault =
+      countAll === 0 ||
+      Boolean(isDefault) ||
+      Boolean(setAsDefault);
+
+    if (makeDefault && countAll > 0) {
+      await AddressBook.update(
+        { isDefault: false },
+        {
+          where: {
             user_id: req.user.uuid,
-        }
-    })
-
-    if(countAll.count >=3){
-        return res.status(mainConfig.status.bad).json({
-            msg:"Can only create a maximum of 3 Addresses, Please edit one of the previous address"
-        })
+            isDefault: true,
+          },
+        },
+      );
     }
 
     const address = await AddressBook.create({
       user_id: req.user.uuid,
-      uuid:nanoid(),
-      firstName,
-      lastName,
-      phone,
-      additional_phone:additionalPhone,
-      city : 'Nigeria',
-      country,
-      region : "Nigeria",
-      isDefault: countAll.count == 0
+      uuid: nanoid(),
+      firstName: String(firstName).trim(),
+      lastName: String(lastName).trim(),
+      phone: normalizePhone(phone),
+      additional_phone: additionalPhone
+        ? normalizePhone(additionalPhone)
+        : null,
+      country: String(country || "Nigeria").trim(),
+      region: String(region).trim(),
+      city: String(city).trim(),
+      street: street ? String(street).trim() : null,
+      landmark: landmark ? String(landmark).trim() : null,
+      label: label ? String(label).trim() : null,
+      isDefault: makeDefault,
     });
-    address.save();
-    return res.status(mainConfig.status.ok).json({
-      msg: "Address Created successfully",
-      data: {
-        id:address.get().id,
-        firstName,
-        lastName,
-        phone,
-        additional_phone:additionalPhone,
-        city,
-        country,
-        region,
-        isDefault: countAll.count == 0
-      },
+
+    return res.status(mainConfig.status.created).json({
+      msg: "Address saved successfully",
+      data: formatAddress(address),
     });
   } catch (error) {
     return errorHandler(res, error);

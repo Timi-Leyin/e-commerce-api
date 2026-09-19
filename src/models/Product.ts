@@ -81,6 +81,14 @@ const Product = db.define("products", {
     type: DataTypes.TEXT("long"),
     // seperated by *** // sends array from frontend,
   },
+}, {
+  indexes: [
+    { fields: ["name"] },
+    { fields: ["category"] },
+    { fields: ["is_archived"] },
+    { fields: ["is_archived", "name"] },
+    { fields: ["createdAt"] },
+  ],
 });
 
 export default Product;

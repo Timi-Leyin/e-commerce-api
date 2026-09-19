@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db";
 import { createId } from "@paralleldrive/cuid2";
+
 const AddressBook = db.define("address-book", {
   id: {
     autoIncrement: true,
@@ -46,6 +47,18 @@ const AddressBook = db.define("address-book", {
   city: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  street: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  landmark: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  label: {
+    type: DataTypes.STRING,
+    allowNull: true,
   },
   isDefault: {
     type: DataTypes.BOOLEAN,

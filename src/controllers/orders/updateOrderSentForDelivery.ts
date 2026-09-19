@@ -5,7 +5,18 @@ import Orders, { orderStatus } from "../../models/Order";
 import Token from "../../models/Token";
 import User from "../../models/User";
 import errorHandler from "../../utils/errorHandler";
+import {
+  canDispatchOrder,
+  formatOrderDelivery,
+  isDelivered,
+  normalizeStatus,
+} from "../../utils/orderDelivery";
 import sendEmail from "../../utils/sendEmail";
+
+const frontendBase = () =>
+  String(
+    process.env.FRONTEND_BASE_URL || "https://all-star-communications.com",
+  ).replace(/\/$/, "");
 
 export default async (req: Request | any, res: Response) => {
   try {
@@ -25,11 +36,28 @@ export default async (req: Request | any, res: Response) => {
 
     const orderData = order.get();
 
+    if (isDelivered(orderData.status)) {
+      return res.status(mainConfig.status.bad).json({
+        msg: "Order is already delivered",
+        data: formatOrderDelivery(orderData),
+      });
+    }
+
+    if (!canDispatchOrder(orderData.status)) {
+      return res.status(mainConfig.status.bad).json({
+        msg: `Order cannot be dispatched from status "${orderData.status}". Payment must be confirmed first.`,
+        data: {
+          orderId: orderData.uuid,
+          status: orderData.status,
+        },
+      });
+    }
+
     const customer = await User.findOne({
       where: {
         uuid: orderData.user_id,
       },
-      attributes: ["email", "firstName"],
+      attributes: ["email", "firstName", "lastName"],
     });
 
     if (!customer) {
@@ -48,6 +76,8 @@ export default async (req: Request | any, res: Response) => {
 
     const tokenType = `order-received:${orderData.uuid}`;
     const tokenValue = nanoid(48);
+    const now = new Date();
+    const alreadyOut = normalizeStatus(orderData.status) === orderStatus.out;
 
     await Token.destroy({
       where: {
@@ -66,6 +96,7 @@ export default async (req: Request | any, res: Response) => {
     await Orders.update(
       {
         status: orderStatus.out,
+        dispatched_at: orderData.dispatched_at || now,
       },
       {
         where: {
@@ -74,31 +105,37 @@ export default async (req: Request | any, res: Response) => {
       },
     );
 
-    const backendBaseUrl = String(
-      process.env.BACKEND_BASE_URL || `${req.protocol}://${req.get("host")}`,
-    ).replace(/\/$/, "");
-
-    const confirmLink = `${backendBaseUrl}/order/confirm-received?token=${tokenValue}&type=${tokenType}`;
+    // Frontend-hosted confirmation page (seamless UX)
+    const confirmLink = `${frontendBase()}/orders/confirm-received?token=${encodeURIComponent(
+      tokenValue,
+    )}&type=${encodeURIComponent(tokenType)}&orderId=${encodeURIComponent(
+      orderData.uuid,
+    )}&orderCode=${encodeURIComponent(orderData.order_code || "")}`;
 
     await sendEmail({
       to: customerData.email,
-      subject: "Order Update • Out for Delivery",
+      subject: `Your order ${orderData.order_code} is on the way`,
       path: "src/emails/order-delivery.ejs",
       data: {
-        brandName: "Cart Royal",
+        brandName: "All Stars Solutions",
         name: customerData.firstName || customerData.email.split("@")[0],
         orderCode: orderData.order_code,
         orderId: orderData.uuid,
         confirmLink,
+        trackLink: `${frontendBase()}/orders/${orderData.uuid}`,
       },
     });
 
+    const updated = await Orders.findOne({ where: { uuid: orderData.uuid } });
+
     return res.status(mainConfig.status.ok).json({
-      msg: "Order marked as sent for delivery",
+      msg: alreadyOut
+        ? "Delivery confirmation email resent"
+        : "Order marked as out for delivery",
       data: {
-        orderId: orderData.uuid,
-        status: orderStatus.out,
+        ...formatOrderDelivery(updated?.get() || orderData),
         deliveryConfirmationLink: confirmLink,
+        emailSentTo: customerData.email,
       },
     });
   } catch (error) {

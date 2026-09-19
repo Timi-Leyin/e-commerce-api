@@ -35,6 +35,12 @@ const Cart = db.define("carts", {
   price: {
     type: DataTypes.STRING,
   },
+}, {
+  indexes: [
+    { fields: ["user_id"] },
+    { fields: ["product_id"] },
+    { fields: ["user_id", "product_id"] },
+  ],
 });
 
 export default Cart;

@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import errorHandler from "../../utils/errorHandler";
-import FLW from "../../config/flutterwave";
+import OPay from "../../config/opay";
 import mainConfig from "../../config/main";
 import Cart from "../../models/Cart";
 import { fetchCart } from "../../utils/carts";
@@ -93,7 +93,7 @@ export default async (req: Request | any, res: Response) => {
     // create order in db
     // Bank Payment
     if (req.body.payment_method.toLowerCase() === "bank") {
-      const pay_link = await FLW.PaymentLink({
+      const pay_link = await OPay.PaymentLink({
         user_id: req.user.uuid,
         uuid: UID,
         amount: String(all_cart_sum),
@@ -143,6 +143,9 @@ export default async (req: Request | any, res: Response) => {
           order_data: all_cart,
           amount: String(all_cart_sum),
           payment_method: req.body.payment_method,
+          delivery_method: String(req.body.delivery_method || "")
+            .toLowerCase()
+            .trim(),
           delivery_address_id:
             (getAddressById && getAddressById.get().id) ||
             (getDefaultAddress && getDefaultAddress.get().id),

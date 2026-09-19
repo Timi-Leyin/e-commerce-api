@@ -49,7 +49,6 @@ export default async (req: IRequest | any, res: Response) => {
 
     return res.status(mainConfig.status.ok).json({
       msg: "Retrived Product",
-      warning: !req.user && "Invalid Autorization",
       data: {
         ...product?.get(),
         seller_info: seller && seller.get(),

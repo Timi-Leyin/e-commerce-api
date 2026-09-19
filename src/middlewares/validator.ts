@@ -169,47 +169,92 @@ export const newAddressValidator = [
   body("firstName")
     .trim()
     .isString()
-    .isLength({
-      min: 3,
-    })
-    .withMessage("First Name must be more than 3 characters"),
+    .isLength({ min: 2 })
+    .withMessage("First name must be at least 2 characters"),
   body("lastName")
     .trim()
     .isString()
-    .isLength({
-      min: 3,
-    })
-    .withMessage("Last Name must be more than 3 characters"),
-  body("phone").trim(),
-  body("additionalPhone").optional().trim(),
+    .isLength({ min: 2 })
+    .withMessage("Last name must be at least 2 characters"),
+  body("phone")
+    .trim()
+    .notEmpty()
+    .withMessage("Phone number is required")
+    .isLength({ min: 10 })
+    .withMessage("Enter a valid phone number"),
+  body("additionalPhone").optional({ nullable: true }).trim(),
   body("country")
+    .optional()
     .trim()
     .isString()
-    .isLength({
-      min: 3,
-    })
-    .withMessage("Country must be more than 3 characters"),
+    .isLength({ min: 2 })
+    .withMessage("Country must be at least 2 characters"),
   body("region")
     .trim()
     .isString()
-    .isLength({
-      min: 3,
-    })
-    .withMessage("Region must be more than 3 characters"),
+    .isLength({ min: 2 })
+    .withMessage("State / region is required"),
   body("city")
     .trim()
     .isString()
-    .isLength({
-      min: 3,
-    })
-    .withMessage("City must be more than 3 characters"),
+    .isLength({ min: 2 })
+    .withMessage("City is required"),
+  body("street")
+    .optional({ nullable: true })
+    .trim()
+    .isString()
+    .isLength({ min: 3 })
+    .withMessage("Street address must be at least 3 characters"),
+  body("landmark").optional({ nullable: true }).trim().isString(),
+  body("label").optional({ nullable: true }).trim().isString(),
+  body("isDefault").optional().isBoolean().toBoolean(),
+  body("setAsDefault").optional().isBoolean().toBoolean(),
 ];
 
-let updateAddressValidator = [];
-updateAddressValidator = Object.assign(
-  updateAddressValidator,
-  newAddressValidator
-);
+export const updateAddressValidator = [
+  body("firstName")
+    .optional()
+    .trim()
+    .isString()
+    .isLength({ min: 2 })
+    .withMessage("First name must be at least 2 characters"),
+  body("lastName")
+    .optional()
+    .trim()
+    .isString()
+    .isLength({ min: 2 })
+    .withMessage("Last name must be at least 2 characters"),
+  body("phone")
+    .optional()
+    .trim()
+    .isLength({ min: 10 })
+    .withMessage("Enter a valid phone number"),
+  body("additionalPhone").optional({ nullable: true }).trim(),
+  body("country")
+    .optional()
+    .trim()
+    .isString()
+    .isLength({ min: 2 })
+    .withMessage("Country must be at least 2 characters"),
+  body("region")
+    .optional()
+    .trim()
+    .isString()
+    .isLength({ min: 2 })
+    .withMessage("State / region is required"),
+  body("city")
+    .optional()
+    .trim()
+    .isString()
+    .isLength({ min: 2 })
+    .withMessage("City is required"),
+  body("street").optional({ nullable: true }).trim().isString(),
+  body("landmark").optional({ nullable: true }).trim().isString(),
+  body("label").optional({ nullable: true }).trim().isString(),
+  body("isDefault").optional().isBoolean().toBoolean(),
+  body("setAsDefault").optional().isBoolean().toBoolean(),
+];
+
 /*
   GENERAL VALIDATORS
 */
@@ -234,5 +279,5 @@ export {
   validationError,
   forgottenPasswordValidator,
   becomeSellerValidator,
-  updateAddressValidator,
 };
+

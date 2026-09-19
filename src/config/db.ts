@@ -12,7 +12,7 @@ const { env } = process;
 //     : undefined;
 
 const db = new Sequelize(env.DB_URL as string, {
-  dialect: "postgres",
+  dialect: "mysql",
   logging: false,
   // dialectOptions,
 });

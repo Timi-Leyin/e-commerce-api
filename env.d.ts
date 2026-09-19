@@ -18,9 +18,13 @@ export declare global{
           GOOGLE_ACCESS_TOKEN:string;
           GOOGLE_CLIENT_SECRET:string;
 
-          FLW_PUBLIC_KEY:string;
-          FLW_PRIVATE_KEY:string;
-          FLW_SECRET_KEY:string;
+          OPAY_MERCHANT_ID:string;
+          OPAY_PUBLIC_KEY:string;
+          OPAY_SECRET_KEY:string;
+          OPAY_ENV?:string;
+          OPAY_BASE_URL?:string;
+          OPAY_SUCCESS_REDIRECT_URL?:string;
+          OPAY_FAILED_REDIRECT_URL?:string;
         }
     }
 }

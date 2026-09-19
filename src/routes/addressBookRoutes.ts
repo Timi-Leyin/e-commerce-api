@@ -1,13 +1,19 @@
 import { Router } from "express";
 import mainConfig from "../config/main";
 import createNew from "../controllers/address-book/createNew";
-import { newAddressValidator, updateAddressValidator, validationError } from "../middlewares/validator";
+import {
+  newAddressValidator,
+  updateAddressValidator,
+  validationError,
+} from "../middlewares/validator";
 import verifyToken from "../middlewares/verifyToken";
 import getAll from "../controllers/address-book/getAll";
 import editAddress from "../controllers/address-book/editAddress";
 import makeDefault from "../controllers/address-book/makeDefault";
+import deleteAddress from "../controllers/address-book/deleteAddress";
 
 const addressBookRoutes = Router();
+
 addressBookRoutes.get("/", verifyToken, getAll);
 
 addressBookRoutes.post(
@@ -15,7 +21,7 @@ addressBookRoutes.post(
   verifyToken,
   newAddressValidator,
   validationError,
-  createNew
+  createNew,
 );
 
 addressBookRoutes.put(
@@ -23,13 +29,19 @@ addressBookRoutes.put(
   verifyToken,
   updateAddressValidator,
   validationError,
-  editAddress
+  editAddress,
 );
-
 
 addressBookRoutes.put(
   mainConfig.routes.defaultAddressBook,
   verifyToken,
-  makeDefault
+  makeDefault,
 );
+
+addressBookRoutes.delete(
+  mainConfig.routes.deleteAddressBook,
+  verifyToken,
+  deleteAddress,
+);
+
 export default addressBookRoutes;

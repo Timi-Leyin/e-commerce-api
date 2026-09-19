@@ -1,11 +1,10 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db";
-import { randomID } from "../utils/numbers";
 import { createId } from "@paralleldrive/cuid2";
 
 export enum orderStatus {
   placed = "order placed",
-  paid="paid",
+  paid = "paid",
   pending = "pending confirmation",
   shipped = "shipped",
   out = "out for delivery",
@@ -23,7 +22,7 @@ const Orders = db.define("orders", {
   uuid: {
     type: DataTypes.STRING,
     unique: true,
-    defaultValue:createId(),
+    defaultValue: createId(),
     allowNull: false,
   },
   user_id: {
@@ -45,6 +44,10 @@ const Orders = db.define("orders", {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  delivery_method: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
   delivery_address_id: {
     type: DataTypes.STRING,
     allowNull: false,
@@ -59,6 +62,14 @@ const Orders = db.define("orders", {
   },
   ip: {
     type: DataTypes.STRING,
+  },
+  dispatched_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  delivered_at: {
+    type: DataTypes.DATE,
+    allowNull: true,
   },
 });
 

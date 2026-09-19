@@ -47,7 +47,7 @@ bun dev
 - deduct product quantity when transaction is completed
 - create order in db
 - user adds delivery address (in a seperate model) maximum of 3 [x]
-- flutterwave webhook
+- opay webhook
 
 
 # Condition 
@@ -62,6 +62,10 @@ bun dev
 
 ## Frontend Docs
 - Forgot Password: `docs/frontend-forgot-password.md`
+- OPay Payment: `docs/frontend-opay-payment.md`
+- Address Book: `docs/frontend-address-book.md`
+- Product Search: `docs/frontend-product-search.md`
+- Order Delivery: `docs/frontend-order-delivery.md`
 - Payment Receipt: `docs/frontend-payment-receipt.md`
 
 ## Backend Docs

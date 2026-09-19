@@ -2,10 +2,11 @@ import { Request, Response } from "express";
 import errorHandler from "../../utils/errorHandler";
 import AddressBook from "../../models/AddressBook";
 import mainConfig from "../../config/main";
+import { formatAddressList } from "../../utils/formatAddress";
 
 export default async (req: Request | any, res: Response) => {
   try {
-    const address = await AddressBook.findAll({
+    const addresses = await AddressBook.findAll({
       where: {
         user_id: req.user.uuid,
       },
@@ -15,25 +16,38 @@ export default async (req: Request | any, res: Response) => {
         "lastName",
         "phone",
         "additional_phone",
-        "city",
         "country",
         "region",
-        "isDefault"
+        "city",
+        "street",
+        "landmark",
+        "label",
+        "isDefault",
+        "updatedAt",
+        "createdAt",
+      ],
+      order: [
+        ["isDefault", "DESC"],
+        ["updatedAt", "DESC"],
       ],
     });
 
-    if (address) {
-      return res.status(mainConfig.status.ok).json({
-            msg: "Address Fetched successfully",
-            data:address
-      });
-    }
+    const data = formatAddressList(addresses);
+    const defaultAddress = data.find((item) => item.isDefault) || null;
 
-    return res.status(mainConfig.status.notFound).json({
-        msg: "No Address Found for this user",
-      });
-
-    
+    return res.status(mainConfig.status.ok).json({
+      msg:
+        data.length > 0
+          ? "Addresses fetched successfully"
+          : "No addresses saved yet",
+      data: {
+        addresses: data,
+        defaultAddress,
+        count: data.length,
+        maxAddresses: 3,
+        canAddMore: data.length < 3,
+      },
+    });
   } catch (error) {
     return errorHandler(res, error);
   }

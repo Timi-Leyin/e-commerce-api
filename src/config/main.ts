@@ -30,6 +30,7 @@ const mainConfig = {
     addAddressBook: "/add",
     editAddressBook: "/edit/:id",
     defaultAddressBook: "/default/:id",
+    deleteAddressBook: "/:id",
   },
   status: {
     // infomation
